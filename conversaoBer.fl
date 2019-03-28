@@ -1,0 +1,22 @@
+%option noyywrap
+%option main
+
+%{
+#include <string.h>
+%}
+
+/*Pattern para identificar o título*/
+TITLE       \<title\>.*\<\/title\>
+
+
+/*CATEGORY    */
+
+
+
+%%
+ 
+{TITLE}   { char title[strlen(yytext)]; sscanf(yytext,"<title>%[^<]</title>",title); printf("Título: %s\n",title);}
+
+.|\n {}
+
+%%
