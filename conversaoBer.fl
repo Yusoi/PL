@@ -3,20 +3,78 @@
 
 %{
 #include <string.h>
+
+//Testa se se encontra dentro de um separador <text>
+int inText = 0;
+//Testa se 
+int fstPara = 0;
+
+int inInfo = 0;
+
 %}
 
 /*Pattern para identificar o título*/
 TITLE       \<title\>.*\<\/title\>
+/*Pattern para identificar a entada num separador <text>*/
+ENTERTEXT   \<text\>
+/*Pattern para identificar a saída de um separador </text>*/
+OUTTEXT     \<\/text\>
+/*Pattern para identificar a entrada num separador de informação {{Info/*/
+ININFO      \{\{Info\/[^|^\n]*
+/*Pattern para identificar a saída de um separador de informação {{Info/*/
+OUTINFO     \}\}
 
+INMINIINFO  \{\{[^\n^}]*
 
+INFOSEP     \|[^\=]*\=[^\s]
+/*INFOSEP     \|[^|^\n]**/
 /*CATEGORY    */
-
+/*Pattern para identificar a saída de uma página*/
+OUTPAGE     \<\/page>
 
 
 %%
  
-{TITLE}   { char title[strlen(yytext)]; sscanf(yytext,"<title>%[^<]</title>",title); printf("Título: %s\n",title);}
+{TITLE}          {char title[strlen(yytext)]; 
+                  sscanf(yytext,"<title>%[^<]</title>",title); 
+                  printf("Título: %s\n",title);}
 
+{ENTERTEXT}      {inText = 1;}
+
+{OUTTEXT}        {inText = 0;}
+
+{ININFO}         {inInfo++;
+                  char infoTitle[strlen(yytext)];
+                  sscanf(yytext,"{{Info/%[^\n]\n",infoTitle);
+                  printf("Info: %s\n",infoTitle);}
+
+{OUTINFO}        {if(inInfo >= 1) inInfo--;}
+
+{INMINIINFO}     {inInfo++;
+                  char miniInfo[strlen(yytext)];
+                  sscanf(yytext,"{{%[^\n^}]",miniInfo),
+                  printf("%s\n",miniInfo);
+                  }
+
+{INFOSEP}        {if(inInfo >= 1){
+                    char sep[strlen(yytext)];
+                    sscanf(yytext,"|%[^=]",sep);
+                    printf("\t%s",sep);}
+                 }
+
+\=[^\n^}]*      {if(inInfo >= 1){
+                    printf("%s\n",yytext);
+                 }}
+
+\[\[              {if(inInfo >= 1){
+
+                  }}
+
+\]\]               {if(inInfo >= 1){
+
+                  }}
+
+{OUTPAGE}        {printf("\n");}
 .|\n {}
 
 %%
